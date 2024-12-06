@@ -1,0 +1,15 @@
+---
+
+galaxy_info:
+  role_name: clickhouse
+  namespace: internal
+  author: "Aleksandr Oreshin"
+  description: "Ansible role for installing and configuring ClickHouse"
+  license: "MIT"
+  min_ansible_version: "2.16.3"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - bionic
+        - focal
+        - jammy

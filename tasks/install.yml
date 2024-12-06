@@ -1,0 +1,46 @@
+---
+
+- name: Check if ClickHouse repository key already exists
+  ansible.builtin.stat:
+    path: /usr/share/keyrings/clickhouse-keyring.gpg
+  register: key_file
+  become: true
+
+- name: Add ClickHouse repository key
+  ansible.builtin.shell: |
+    GNUPGHOME=$(mktemp -d)
+    sudo GNUPGHOME="$GNUPGHOME" gpg --no-default-keyring --keyring /usr/share/keyrings/clickhouse-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys E0C56BD4
+    sudo rm -rf "$GNUPGHOME"
+    sudo chmod +r /usr/share/keyrings/clickhouse-keyring.gpg
+  become: true
+  when: not key_file.stat.exists
+
+- name: Check if ClickHouse repository already exists
+  ansible.builtin.stat:
+    path: /etc/apt/sources.list.d/clickhouse.list
+  register: repo_file
+  become: true
+
+- name: Add ClickHouse repository
+  ansible.builtin.shell: |
+    echo "deb [signed-by=/usr/share/keyrings/clickhouse-keyring.gpg] https://repo.yandex.ru/clickhouse/deb/stable/ main/" | sudo tee /etc/apt/sources.list.d/clickhouse.list
+  become: true
+  when: not repo_file.stat.exists
+
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install specific version of ClickHouse
+  ansible.builtin.apt:
+    name:
+      - clickhouse-server={{ clickhouse_version }}
+      - clickhouse-client={{ clickhouse_version }}
+    state: present
+
+- name: Ensure ClickHouse service is enabled and started
+  ansible.builtin.service:
+    name: clickhouse-server
+    enabled: true
+    state: started

@@ -1,0 +1,35 @@
+#!/bin/bash
+
+BACKUP_PATH="/var/lib/clickhouse/backup"
+AWS_ACCESS_KEY="{{ aws_access_key }}"
+AWS_SECRET_KEY="{{ aws_secret_key }}"
+AWS_BUCKET="{{ aws_bucket }}"
+AWS_REGION="{{ aws_region }}"
+HOSTNAME=$(hostname)
+DATE="$1" # Дата бэкапа передается как аргумент в формате '%Y%m%d', как пример 20241202
+
+# Check local backup if exist
+if [ ! -d "${BACKUP_PATH}/${DATE}" ]; then
+  echo "Backup $DATE not found locally. Downloading from S3..."
+
+  # Download from S3 if not exist local backup.
+  AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY}" AWS_SECRET_ACCESS_KEY="${AWS_SECRET_KEY}" \
+  aws s3 cp "s3://${AWS_BUCKET}/$HOSTNAME/${DATE}" "${BACKUP_PATH}/${DATE}" --recursive \
+    --region "${AWS_REGION}"
+
+  if [ $? -ne 0 ]; then
+    echo "Error: Failed to download backup from S3."
+    exit 2
+  fi
+fi
+
+echo "Restoring from backup ${BACKUP_PATH}${DATE}..."
+clickhouse-backup restore ${DATE}
+
+if [ $? -ne 0 ]; then
+  echo "Error: Failed to restore backup."
+  exit 4
+fi
+
+echo "Backup ${BACKUP_PATH}${DATE} restored successfully."
+exit 0

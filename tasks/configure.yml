@@ -1,0 +1,19 @@
+---
+- name: Ensure ClickHouse directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: clickhouse
+    group: clickhouse
+  with_items:
+    - /var/lib/clickhouse
+    - /etc/clickhouse-server
+
+- name: Upload ClickHouse config.xml
+  ansible.builtin.template:
+    src: config.xml.j2
+    dest: /etc/clickhouse-server/config.xml
+    owner: clickhouse
+    group: clickhouse
+    mode: '0644'
+  notify: Restart ClickHouse

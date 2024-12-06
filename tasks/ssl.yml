@@ -1,0 +1,25 @@
+---
+- name: Generate DH parameters
+  ansible.builtin.command:
+    cmd: openssl dhparam -out "{{ clickhouse_dhparam_path }}" 2048
+  args:
+    creates: "{{ clickhouse_dhparam_path }}"
+
+- name: Generate SSL certificate and key
+  ansible.builtin.command:
+    cmd: >
+      openssl req -newkey rsa:2048 -nodes -keyout "{{ clickhouse_ssl_key_path }}"
+      -x509 -days 365 -out "{{ clickhouse_ssl_cert_path }}" -subj "/CN=localhost"
+  args:
+    creates: "{{ clickhouse_ssl_key_path }}"
+
+- name: Ensure correct permissions for SSL files
+  ansible.builtin.file:
+    path: "{{ item }}"
+    owner: clickhouse
+    group: clickhouse
+    mode: '0600'
+  loop:
+    - "{{ clickhouse_ssl_key_path }}"
+    - "{{ clickhouse_ssl_cert_path }}"
+    - "{{ clickhouse_dhparam_path }}"

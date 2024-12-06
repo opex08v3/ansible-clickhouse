@@ -1,0 +1,23 @@
+#!/bin/bash
+
+BACKUP_PATH="/var/lib/clickhouse/backup"
+RETENTION_DAYS="{{ backup_retention_days }}"
+AWS_ACCESS_KEY="{{ aws_access_key }}"
+AWS_SECRET_KEY="{{ aws_secret_key }}"
+AWS_BUCKET="{{ aws_bucket }}"
+AWS_REGION="{{ aws_region }}"
+HOSTNAME=$(hostname)
+DATE="$(date +'%Y%m%d')"
+
+echo "Creating backup..."
+clickhouse-backup create $DATE
+
+echo "Uploading backup to S3..."
+AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY}" AWS_SECRET_ACCESS_KEY="${AWS_SECRET_KEY}" \
+aws s3 cp "${BACKUP_PATH}/$DATE" "s3://${AWS_BUCKET}/$HOSTNAME/$DATE" --recursive \
+  --region "${AWS_REGION}" --sse AES256
+
+echo "Cleaning up old backups..."
+find "${BACKUP_PATH}" -type d -mtime +"${RETENTION_DAYS}" -exec rm -rf {} +
+
+echo "Backup completed successfully."
