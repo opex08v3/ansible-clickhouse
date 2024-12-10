@@ -3,6 +3,6 @@ dataDir=/var/lib/zookeeper
 clientPort=2181
 initLimit=10
 syncLimit=5
-{% for server in zookeeper_servers %}
-server.{{ server.id }}={{ server.host }}:2888:3888
+{% for host in groups['clickhouse'] %}
+server.{{ hostvars[host]['zookeeper_id'] }}={{ host }}:2888:3888
 {% endfor %}
