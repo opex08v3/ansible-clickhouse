@@ -1,5 +1,14 @@
 # Clickhouse
 
+## Hosts
+
+```yaml
+[clickhouse]
+clickhouse01.server zookeeper_id=1
+clickhouse02.server zookeeper_id=2
+clickhouse03.server zookeeper_id=3
+```
+
 ---
 ## Clickhouse config
 ```yaml
