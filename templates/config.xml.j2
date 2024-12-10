@@ -54,12 +54,13 @@
     {% endif %}
     {% if clickhouse_zookeeper_nodes %}
     <zookeeper>
-        {% for node in clickhouse_zookeeper_nodes %}
+        {% for host in groups['clickhouse'] %}
         <node>
-            <host>{{ node.host }}</host>
-            <port>{{ node.port }}</port>
+            <host>{{ hostvars[host]['inventory_hostname'] }}</host>
+            <port>2181</port>
+            <id>{{ hostvars[host].get('zookeeper_id', 'unknown') }}</id>
         </node>
-        {% endfor %}
+    {% endfor %}
     </zookeeper>
     {% endif %}
     {% if clickhouse_custom_settings %}
